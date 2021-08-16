@@ -104,7 +104,9 @@ export default {
 			}
 		},
 		async search () {
-			const res = await fetch(`https://itunes.apple.com/search?limit=5&media=software&term=${encodeURI(this.currentItem.niceName)}`)
+			const res = await fetch(`https://itunes.apple.com/search?limit=5&media=software&term=${encodeURI(this.currentItem.niceName)}`, {
+				mode: 'cors'
+			})
 			const data = await res.json()
 			const exactMatch = data.results.filter(ele => this.currentItem.packages.includes(ele.bundleId))
 			if (exactMatch.length) {
