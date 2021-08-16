@@ -1,5 +1,4 @@
 [[headers]]
   for = "/*"
     [headers.values]
-    Access-Control-Allow-Origin = '''https://github.com
-	https://itunes.apple.com/'''
+    Access-Control-Allow-Origin = "*"
