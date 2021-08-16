@@ -13,9 +13,10 @@ import createPersistedState from "vuex-persistedstate"
 const defaultState = {
 	rawDrawableXML: '',
 	rawAppFilterXML: '',
+	rawMappedDrawables: '',
 	appMappings: {},
+	alreadyMapped: [],
 	index: 0,
-	iOSApps: [],
 }
 
 const state = {...defaultState}
@@ -30,19 +31,19 @@ export default createStore({
 		setRawAppFilter(state, data) {
 			state.rawAppFilterXML = data
 		},
+		setRawMappedDrawables(state, data) {
+			state.rawMappedDrawables = data
+		},
 		resetData (state) {
 			Object.assign(state, defaultState)
 		},
 		setApps(state, data) {
 			state.appMappings = data
 		},
-		setiOSApps(state, data) {
-			state.iOSApps = data
+		setAlreadyMapped(state, data) {
+			state.alreadyMapped = data
 		},
-		setFolderContents(state, data) {
-			state.folderContents = data
-		},
-		setMapping(state, data) {
+		mapApp(state, data) {
 			state.appMappings[data.drawableName].bundleId = data.bundleId
 		},
 		increaseIndex(state) {
@@ -56,9 +57,6 @@ export default createStore({
 		},
 	},
 	actions: {
-		mapApp({ commit }, data) {
-			commit('setMapping', data)
-		},
 		prevPage({ commit }) {
 			commit('decreaseIndex')
 		},
@@ -70,9 +68,6 @@ export default createStore({
 		apps(state) {
 			return state.appMappings
 		},
-		iOSApps(state) {
-			return state.iOSApps
-		},
 		getApp (state) {
 			return (drawableName) => state.appMappings[drawableName]
 		},
@@ -81,6 +76,12 @@ export default createStore({
 		},
 		rawAppFilter(state) {
 			return state.rawAppFilterXML
+		},
+		rawMappedDrawables(state) {
+			return state.rawMappedDrawables
+		},
+		alreadyMapped(state) {
+			return state.alreadyMapped
 		},
 		index(state) {
 			return state.index

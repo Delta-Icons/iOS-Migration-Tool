@@ -2,7 +2,7 @@
 	<div>
 		<h1>Current icon:</h1>
 		<div class="currentItem" v-if="currentItem">
-			<img :src="deltaIconUrl" class="currentIcon">
+			<img :src="deltaIconUrl" id="currentIcon">
 			<div class="text">
 				<h1>
 					{{ currentItem.niceName }}
@@ -16,7 +16,7 @@
 			</div>
 		</div>
 	</div>
-	<h2>Options</h2>
+	<hr>
 	<div class="results" v-if="results.length > 0">
 		<div class="result" v-for="result in results" :key="result.bundleId">
 			<input type="radio" name="app" :id="result.bundleId" :value="result.bundleId" v-model="selection">
@@ -30,6 +30,10 @@
 					<span> {{ result.artistName }}</span>
 				</div>
 			</label>
+		</div>
+		<div class="result ignore">
+			<input type="radio" name="app" id="ignore" value="ignore" v-model="selection">
+			<label for="ignore">Ignore from now on</label>
 		</div>
 		<div class="result none">
 			<input type="radio" name="app" id="none" :value="null" v-model="selection">
@@ -50,11 +54,11 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapGetters, mapActions, mapMutations } from 'vuex'
 
 export default {
 	name: 'Package',
-	props: ['drawableName'],
+	props: ['drawableName', 'blockAutoNav'],
 	data() {
 		return {
 			results: [],
@@ -79,28 +83,25 @@ export default {
 		...mapActions([
 			'nextPage',
 			'prevPage',
+		]),
+		...mapMutations([
 			'mapApp',
 		]),
 		navigateBack() {
 			const pkg = Object.keys(this.apps)[this.index - 1]
 			this.prevPage()
-			this.$router.push('/package/' + pkg)
-			// restore selection
-			if(this.getApp(pkg).bundleId) {
-				this.selection = this.getApp(pkg).bundleId
-			}
+			this.$router.push({name: 'Package', params: {drawableName: pkg, blockAutoNav: true}})
 		},
 		navigateNext() {
 			const pkg = Object.keys(this.apps)[this.index + 1]
 			this.nextPage()
-			this.$router.push('/package/' + pkg)
-			if(this.selection != null) {
+			this.$router.push({name: 'Package', params: {drawableName: pkg}})
+			if(this.selection != null && this.selection != undefined) {
 				this.mapApp({
 					drawableName: this.drawableName,
 					bundleId: this.selection
 				})
 			}
-			this.selection = null
 		},
 		async search () {
 			const res = await fetch(`https://itunes.apple.com/search?limit=5&media=software&term=${encodeURI(this.currentItem.niceName)}`)
@@ -112,11 +113,17 @@ export default {
 					drawableName: this.drawableName,
 					bundleId: exactMatch[0].bundleId
 				})
-				this.navigateNext()
+				if (!this.blockAutoNav) this.navigateNext()
 			} else if (!data.results.length) {
-				this.navigateNext()
+				if (!this.blockAutoNav) this.navigateNext()
+			} else {
+				if (this.currentItem.bundleId) {
+					this.selection = this.currentItem.bundleId
+				} else {
+					this.selection = null
+				}
+				this.results = data.results
 			}
-			this.results = data.results
 		}
 	},
 	mounted () {
@@ -130,20 +137,22 @@ export default {
 }
 </script>
 
-<style>
+<style lang="scss">
 	.currentItem {
 		display: grid;
-		grid-template-columns: auto 1fr;
+		grid-template-columns: 120px 1fr;
 		grid-gap: 1rem;
+
+		h1 {
+			margin-bottom: .5rem;
+			margin-top: 0;
+		}
 	}
 
-	.currentItem h1 {
-		margin-bottom: 1rem;
-		margin-top: 0;
-	}
-
-	.currentIcon {
+	#currentIcon {
 		width: 120px;
+		height: 120px;
+		display: block !important;
 	}
 
 	ul {
@@ -180,16 +189,19 @@ export default {
 		border-radius: 12px;
 		width: 100%;
 		display: grid;
-		grid-template-columns: auto auto;
+		grid-template-columns: 100px auto;
 		justify-content: flex-start;
 		align-items: center;
-		grid-gap: 1rem;
+		grid-gap: .25rem;
 	}
 
-	.thumb {
+	.thumb{
 		line-height: 0;
-		border-radius: 10px;
-		overflow: hidden;
+		img {
+			border-radius: 10px;
+			max-height: 85px;
+			overflow: hidden;
+		}
 	}
 
 	.name {

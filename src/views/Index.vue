@@ -17,7 +17,7 @@
 		</div>
 	</div>
 	<router-link v-if="loaded & !error" to="processing">
-		Proceed
+		<button>Proceed</button>
 	</router-link>
 </template>
 
@@ -37,7 +37,7 @@ export default {
 		...mapMutations([
 			'setRawDrawable',
 			'setRawAppFilter',
-			'setiOSApps',
+			'setRawMappedDrawables',
 			'resetData',
 		])
 	},
@@ -47,14 +47,13 @@ export default {
 			this.$store.state.apps = {}
 			const drawableData = await fetch('https://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/xml/drawable.xml')
 			const appFilterData = await fetch('https://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/xml/appfilter.xml')
-			const iconBundles = await fetch('https://api.github.com/repos/delta-icons/iOS/contents/Library/Themes/Delta%20Icons.theme/IconBundles')
+			const mappedDrawables = await fetch('https://raw.githubusercontent.com/Delta-Icons/iOS/master/mapped_android_drawables.txt')
 			const drawableXML = await drawableData.text()
 			const appFilterXML = await appFilterData.text()
-			const iconBundlesArray = await iconBundles.json()
-			const iOSpackages = iconBundlesArray.map(icon => icon.name.replace('-large.png'))
+			const mappedDrawablesText = await mappedDrawables.text()
 			this.setRawDrawable(drawableXML)
 			this.setRawAppFilter(appFilterXML)
-			this.setiOSApps(iOSpackages)
+			this.setRawMappedDrawables(mappedDrawablesText)
 			this.loaded = true
 		} catch (e) {
 			this.error = true

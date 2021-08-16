@@ -15,6 +15,8 @@ export default {
 	computed: {
 		...mapGetters([
 			'rawDrawable',
+			'rawMappedDrawables',
+			'alreadyMapped',
 			'iOSApps',
 			'apps'
 		])
@@ -22,6 +24,7 @@ export default {
 	methods: {
 		...mapMutations([
 			'setApps',
+			'setAlreadyMapped',
 			'resetIndex',
 		]),
 		...mapActions([
@@ -67,34 +70,35 @@ export default {
 	mounted() {
 		let appData = {}
 		this.setApps({})
+		this.setAlreadyMapped(this.rawMappedDrawables.split(/\r?\n/))
 		this.resetIndex()
 		if (this.rawDrawable.length) {
 			let drawableName, altName, altNum
 			const appFilterXML = domp.parseFromString(this.$store.getters.rawAppFilter, 'text/xml')
 			const drawableXML = domp.parseFromString(this.$store.getters.rawDrawable, 'text/xml')
-			drawableXML.querySelectorAll('item').forEach(x => {
+			for (const x of drawableXML.querySelectorAll('item')) {
 				if (x.getAttribute('name')) {
 					drawableName = x.getAttribute('drawable')
+					if (this.alreadyMapped.includes(drawableName)) continue
 					if(drawableName.indexOf('_alt') == -1) {
-						// match the drawable attributes to get al lpackage ids mapped to a drawable
+						// match the drawable attributes to get all package ids mapped to a drawable
 						let appFilters = [...appFilterXML.querySelectorAll(`[drawable="${drawableName}"]`)]
 						appFilters = appFilters.map(y => {
 							const component = y.getAttribute('component')
 							return component.substring(14, component.indexOf('/'))
 						})
-						// check if exact package name exists in the ios icons already
-						if (!appFilters.some(x => this.iOSApps.includes(x))){
-							if(appData[drawableName] != null) {
-								appData[drawableName] = {
-									niceName: x.getAttribute('name'),
-									packages: appFilters
-								}
-							} else {
-								appData[drawableName] = {
-									niceName: x.getAttribute('name'),
-									packages: appFilters,
-									...appData[drawableName]
-								}
+						if(appData[drawableName] == null) {
+							// add icon as new one
+							appData[drawableName] = {
+								niceName: x.getAttribute('name'),
+								packages: appFilters
+							}
+						} else {
+							// if somehow an alt got added before the main icon
+							appData[drawableName] = {
+								niceName: x.getAttribute('name'),
+								packages: appFilters,
+								...appData[drawableName]
 							}
 						}
 					} else {
@@ -118,7 +122,7 @@ export default {
 						appData[drawableName].alts[altNum] = altName
 					}
 				}
-			})
+			}
 			this.setApps(appData)
 			console.log(this.apps);
 			this.$router.push('/package/' + Object.keys(appData)[0])

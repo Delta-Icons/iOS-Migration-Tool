@@ -6,28 +6,28 @@ import Checkout from '../views/Checkout'
 import Store from '../store'
 
 const routes = [
-  {
-    path: '/',
-    name: 'Index',
-    component: Index
-  },
-  {
-    path: '/processing',
+	{
+		path: '/',
+		name: 'Index',
+		component: Index
+	},
+	{
+		path: '/processing',
 		name: 'Processing',
-    component: Processing
-  },
-  {
-    path: '/package/:drawableName',
+		component: Processing
+	},
+	{
+		path: '/package/:drawableName',
 		name: 'Package',
 		props: true,
-    component: Package
-  },
-  {
-    path: '/checkout',
+		component: Package
+	},
+	{
+		path: '/checkout',
 		name: 'Checkout',
 		props: true,
-    component: Checkout
-  },
+		component: Checkout
+	},
 ]
 
 const router = createRouter({
@@ -35,8 +35,8 @@ const router = createRouter({
 	routes,
 	beforeEach ({next}) {
 		Store.getters.maxIndex > 0
-			? next()
-			: next('/checkout')
+		? next()
+		: next('/checkout')
 	}
 })
 

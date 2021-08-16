@@ -9,6 +9,11 @@
 			<div class="loader"></div>
 			<span>This will take a second.</span>
 		</div>
+		<div class="errors">
+			<div class="error" v-for="error in errors" :key="error">
+				{{ error }}
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -17,18 +22,21 @@ import { mapGetters } from "vuex";
 import JSZip from 'jszip'
 
 const fr = new FileReader()
+let handled = []
 
 export default {
 	name: 'Checkout',
 	data () {
 		return {
-			loading: false
+			loading: false,
+			errors: [],
 		}
 	},
 	computed: {
 		...mapGetters([
 			'apps',
 			'getApp',
+			'alreadyMapped'
 		]),
 		mappedItems () {
 			return Object.values(this.apps).filter(x => x.bundleId != null)
@@ -54,24 +62,46 @@ export default {
 			link.click()
 		},
 		async addIcon (drawableName, fileName, zip) {
-			const res = await fetch(`http://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/drawable-nodpi/${drawableName}.png`)
-			const imgBlob = await res.blob()
-			const base64Data = await this.blobToBase64(imgBlob)
-			zip.file(`icons/${fileName}-large.png`, base64Data.substring(22), {base64: true})
+			try {
+				// Proxy GitHub during development to avoid CORS
+				const res = process.env.NODE_ENV == "development"
+				? await fetch(`/icons/${drawableName}.png`)
+				: await fetch(`http://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/drawable-nodpi/${drawableName}.png`)
+
+
+				if(res.ok) {
+					const imgBlob = await res.blob()
+					const base64Data = await this.blobToBase64(imgBlob)
+					zip.file(`icons/${fileName}-large.png`, base64Data.substring(22), {base64: true})
+				}
+			} catch (e) {
+				this.errors.push(`Failed not fetch ${drawableName}, please add manually:\n${e}`)
+			}
 		},
 		async generateAndSave () {
+			handled = this.alreadyMapped
 			this.loading = true
 			const zip = new JSZip()
 			for (const [drawableName, values] of Object.entries(this.apps)) {
 				if (values.bundleId != null) {
+					if (values.bundleId !== null) {
+						handled.push(drawableName)
+						// add item as ignored so skip adding icon file
+					}
+					if(values.bundleId == 'ignore') continue
 					await this.addIcon(drawableName, values.bundleId, zip)
 					if (values.alts) {
 						for (const [index, value] of Object.entries(values.alts)){
-							await this.addIcon(value, values.bundleId + index.toString(), zip)
+							try {
+								await this.addIcon(value, values.bundleId + index.toString(), zip)
+							} catch (e) {
+								console.log(e);
+							}
 						}
 					}
 				}
 			}
+			zip.file('mapped_android_drawables.txt', handled.join('\n'))
 			this.saveZip(zip)
 			this.loading = false
 		},
