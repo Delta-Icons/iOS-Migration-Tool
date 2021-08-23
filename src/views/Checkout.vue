@@ -66,8 +66,8 @@ export default {
 				// Proxy GitHub during development to avoid CORS
 				// const res = process.env.NODE_ENV == "development"
 				// ? await fetch(`/icons/${drawableName}.png`)
-				// : await fetch(`http://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/drawable-nodpi/${drawableName}.png`)
-				const res = await fetch(`http://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/drawable-nodpi/${drawableName}.png`)
+				// : await fetch(`https://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/drawable-nodpi/${drawableName}.png`)
+				const res = await fetch(`https://raw.githubusercontent.com/Delta-Icons/android/master/app/src/main/res/drawable-nodpi/${drawableName}.png`)
 
 				if(res.ok) {
 					const imgBlob = await res.blob()
