@@ -2,7 +2,7 @@
 	<div>
 		<h1>Delta iOS Migration</h1>
 		<p>
-			This, if successful, generates a renaming script for icons for bash / cmd.
+			This, if successful, generates a zip file with icons and record of all mapped android icons.
 		</p>
 		<div class="drawable">
 			<div v-if="!loaded">
